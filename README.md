@@ -312,17 +312,166 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-## Hyperdrive Setup (Optional)
+## External Database Options (Optional)
 
-Hyperdrive provides connection pooling for external PostgreSQL/MySQL databases:
+While D1 (SQLite at the edge) is included by default, you may want to connect to an external PostgreSQL or MySQL database for more complex use cases. This project supports two approaches:
+
+### Option 1: Hyperdrive (Recommended for PostgreSQL/MySQL)
+
+[Hyperdrive](https://developers.cloudflare.com/hyperdrive/) provides connection pooling and caching for external databases, dramatically reducing latency by maintaining persistent connections at the edge.
+
+**Setup:**
 
 ```bash
-# Create Hyperdrive configuration
+# Create Hyperdrive configuration pointing to your database
 npx wrangler hyperdrive create nuxt-app-hyperdrive \
-  --connection-string="postgresql://user:pass@host:5432/database"
+  --connection-string="postgresql://user:password@host:5432/database"
 
-# Uncomment the hyperdrive section in wrangler.jsonc and add the generated ID
+# Note the generated ID and update wrangler.jsonc
 ```
+
+**Update wrangler.jsonc** - Uncomment the hyperdrive section:
+
+```jsonc
+"hyperdrive": [
+  {
+    "binding": "HYPERDRIVE",
+    "id": "your-hyperdrive-id-here"
+  }
+]
+```
+
+**Usage with postgres.js:**
+
+```bash
+npm install postgres
+```
+
+```typescript
+// server/api/example.ts
+import postgres from 'postgres'
+
+export default defineEventHandler(async (event) => {
+  const connectionString = getHyperdriveConnectionString(event)
+  
+  const sql = postgres(connectionString, {
+    // Hyperdrive handles connection pooling, so disable client-side pooling
+    max: 1,
+  })
+  
+  const users = await sql`SELECT * FROM users`
+  await sql.end()
+  
+  return { success: true, data: users }
+})
+```
+
+**Benefits of Hyperdrive:**
+- Connection pooling at the edge (no cold start connection delays)
+- Query result caching for read-heavy workloads
+- Works with any PostgreSQL or MySQL database (Neon, Supabase, PlanetScale, AWS RDS, etc.)
+- Automatic connection management
+
+---
+
+### Option 2: Neon Serverless Driver (Direct Connection)
+
+[Neon](https://neon.tech) provides serverless PostgreSQL with a special HTTP-based driver optimized for edge/serverless environments. This approach connects directly without Hyperdrive.
+
+**Setup:**
+
+1. Create a Neon database at [neon.tech](https://neon.tech)
+2. Get your connection string from the Neon dashboard
+
+**Install the Neon serverless driver:**
+
+```bash
+npm install @neondatabase/serverless
+```
+
+**Add your connection string as a secret:**
+
+```bash
+npx wrangler secret put NEON_DATABASE_URL
+# Paste your Neon connection string when prompted
+```
+
+**Create a utility function** (`server/utils/neon.ts`):
+
+```typescript
+import { neon } from '@neondatabase/serverless'
+import type { H3Event } from 'h3'
+
+export function useNeon(event?: H3Event) {
+  const env = useCloudflareEnv(event)
+  
+  if (!env.NEON_DATABASE_URL) {
+    throw new Error('NEON_DATABASE_URL is not configured')
+  }
+  
+  return neon(env.NEON_DATABASE_URL)
+}
+```
+
+**Update Cloudflare types** (`server/utils/cloudflare.ts`):
+
+```typescript
+export interface CloudflareEnv {
+  DB: D1Database
+  KV: KVNamespace
+  BUCKET: R2Bucket
+  HYPERDRIVE?: Hyperdrive
+  NEON_DATABASE_URL?: string  // Add this line
+}
+```
+
+**Usage:**
+
+```typescript
+// server/api/neon-example.ts
+export default defineEventHandler(async (event) => {
+  const sql = useNeon(event)
+  
+  // Tagged template literal syntax
+  const users = await sql`SELECT * FROM users WHERE active = true`
+  
+  return { success: true, data: users }
+})
+```
+
+**With Drizzle ORM:**
+
+```typescript
+import { drizzle } from 'drizzle-orm/neon-http'
+import { neon } from '@neondatabase/serverless'
+import * as schema from '../database/schema'
+
+export function useNeonDrizzle(event?: H3Event) {
+  const env = useCloudflareEnv(event)
+  const sql = neon(env.NEON_DATABASE_URL!)
+  return drizzle(sql, { schema })
+}
+```
+
+---
+
+### Comparison: D1 vs Hyperdrive vs Neon Serverless
+
+| Feature | D1 (Default) | Hyperdrive | Neon Serverless |
+|---------|--------------|------------|-----------------|
+| Database Type | SQLite | PostgreSQL/MySQL | PostgreSQL |
+| Location | Cloudflare Edge | Your existing DB | Neon Cloud |
+| Connection | Native binding | Pooled TCP | HTTP/WebSocket |
+| Latency | Lowest | Low (pooled) | Low (HTTP) |
+| Setup | Auto-provisioned | Manual config | Manual config |
+| Best For | New projects, simple data | Existing databases | Serverless-first PostgreSQL |
+| Drizzle Support | ✅ `drizzle-orm/d1` | ✅ `drizzle-orm/postgres-js` | ✅ `drizzle-orm/neon-http` |
+
+**Recommendations:**
+- **New projects**: Start with D1 (included by default)
+- **Existing PostgreSQL/MySQL**: Use Hyperdrive for best performance
+- **Need PostgreSQL features**: Use Neon with serverless driver or Hyperdrive
+- **Multi-region with existing DB**: Hyperdrive provides edge connection pooling
 
 ## Environment Variables
 
