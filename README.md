@@ -1,34 +1,53 @@
 # Nuxt + Cloudflare Workers One-Click Deploy
 
-A production-ready Nuxt 4 template with full Cloudflare Workers integration including D1 (SQLite), KV (Key-Value), R2 (Object Storage), and Hyperdrive (PostgreSQL/MySQL pooling).
+A production-ready **Nuxt 4 full-stack starter template** designed for **Cloudflare Workers** deployment with complete edge storage integration. This isn't just a frontend framework—it's a batteries-included backend ready to build real applications with databases, file storage, and caching at the edge.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_USERNAME/YOUR_REPO_NAME)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/sredon19/oneclick-nuxt-d1-r2-kv)
 
-> **Note:** Replace `YOUR_USERNAME/YOUR_REPO_NAME` in the button URL above with your GitHub repository path.
+> **Try it now:** Click the button above to fork and deploy your own instance in minutes.
+
+## What Makes This Different?
+
+Unlike typical Nuxt templates that focus on frontend-only or Cloudflare Pages deployments, this starter is built specifically for **Cloudflare Workers** with production-ready patterns:
+
+- **Real backend utilities** - Not just bindings, but battle-tested helper functions for D1, KV, and R2
+- **Type-safe database** - Drizzle ORM with SQLite (D1) for relational data at the edge
+- **Working examples** - Complete CRUD APIs for users, file uploads, and caching
+- **Migration system** - Proper database versioning with SQL migrations
+- **Edge-first architecture** - Designed for global distribution from day one
 
 ## One-Click Deploy
 
 Click the **Deploy to Cloudflare** button above to:
 
 1. ✅ Fork this repository to your GitHub account
-2. ✅ Auto-provision a D1 database
-3. ✅ Auto-provision a KV namespace
-4. ✅ Auto-provision an R2 bucket
-5. ✅ Deploy to Cloudflare Workers
-6. ✅ Set up CI/CD for future pushes
+2. ✅ Auto-provision a D1 database (SQLite at the edge)
+3. ✅ Auto-provision a KV namespace (key-value store)
+4. ✅ Auto-provision an R2 bucket (object storage)
+5. ✅ Deploy to Cloudflare Workers globally
+6. ✅ Set up GitHub Actions CI/CD for automatic deployments
 
 No manual configuration required! The deploy button reads `wrangler.jsonc` and creates all necessary resources automatically.
 
 ## Features
 
-- 🚀 **Nuxt 4** - Latest Nuxt framework with full TypeScript support
-- ☁️ **Cloudflare Workers** - Edge-first deployment (not Pages)
-- 📦 **D1 Database** - SQLite at the edge with Drizzle ORM
-- 🗄️ **KV Storage** - Key-value storage for caching and more
-- 📁 **R2 Blob Storage** - Object storage for files and assets
+### Framework & Deployment
+- 🚀 **Nuxt 4** - Latest Nuxt with full TypeScript and auto-imports
+- ☁️ **Cloudflare Workers** - True edge deployment (not Pages)
+- 📝 **Modern Config** - `wrangler.jsonc` with comments and clear structure
+
+### Edge Storage Services
+- 📦 **D1 Database** - SQLite at the edge with Drizzle ORM type safety
+- 🗄️ **KV Storage** - Redis-like key-value store for caching and sessions
+- 📁 **R2 Blob Storage** - S3-compatible object storage for files
 - ⚡ **Hyperdrive** - Connection pooling for PostgreSQL/MySQL (optional)
-- 📝 **wrangler.jsonc** - Modern JSON configuration with comments
-- 🔘 **One-Click Deploy** - Deploy to Cloudflare button auto-provisions everything
+
+### Developer Experience
+- 🛠️ **Utility Functions** - Clean abstractions over Cloudflare bindings
+- 🔄 **Migration System** - Version-controlled SQL migrations for D1
+- 📚 **Working Examples** - Complete API routes demonstrating patterns
+- 🎯 **Type Safety** - Full TypeScript coverage including Cloudflare APIs
+- 🔘 **One-Click Deploy** - Zero-config deployment to production
 
 ## Project Structure
 
@@ -102,13 +121,13 @@ GET    /api/hyperdrive             # Test connection
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd nuxt-cloudflare-oneclick
+git clone https://github.com/sredon19/oneclick-nuxt-d1-r2-kv.git
+cd oneclick-nuxt-d1-r2-kv
 
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (with mock bindings)
 npm run dev
 ```
 
@@ -313,20 +332,49 @@ Set secrets using Wrangler:
 npx wrangler secret put MY_SECRET
 ```
 
-## Accessing Cloudflare Bindings
+## Architecture Notes
+
+### Workers vs Pages
+
+This project uses **Cloudflare Workers** (not Pages). Key differences:
+
+- **Nitro preset**: `cloudflare-module` (not `cloudflare-pages`)
+- **Binding access**: `event.context.cloudflare.env` (Workers runtime)
+- **Build output**: `.output/server/index.mjs` (single entry point)
+
+### Why Workers?
+
+Workers provide more flexibility for backend-heavy applications:
+- Direct access to all Cloudflare services (D1, KV, R2, Durable Objects)
+- Full request/response control
+- Better suited for API-first architectures
+- No build-time asset limitations
+
+### Accessing Cloudflare Bindings
 
 All Cloudflare bindings are available via `event.context.cloudflare.env`:
 
 ```typescript
 export default defineEventHandler(async (event) => {
-  const { DB, KV, BUCKET, HYPERDRIVE } = event.context.cloudflare.env
+  // Prefer utility functions (recommended)
+  const db = useDatabase(event)
+  const kv = useKV(event)
+  const bucket = useR2(event)
 
-  // Use bindings directly
-  const result = await DB.prepare('SELECT * FROM users').all()
-  const value = await KV.get('my-key')
-  const file = await BUCKET.get('my-file.txt')
+  // Or access bindings directly (if needed)
+  const { DB, KV, BUCKET } = event.context.cloudflare.env
 })
 ```
+
+## Use Cases
+
+This template is ideal for:
+
+- **SaaS Applications** - Full-stack apps with user auth, databases, and file storage
+- **API Services** - RESTful APIs with global edge deployment
+- **Content Platforms** - Blogs, portfolios, or CMS with media storage
+- **Real-time Apps** - WebSocket support via Durable Objects (add-on)
+- **Mobile Backends** - Fast, globally distributed API backends
 
 ## Resources
 
@@ -334,9 +382,12 @@ export default defineEventHandler(async (event) => {
 - [Cloudflare D1 Documentation](https://developers.cloudflare.com/d1/)
 - [Cloudflare KV Documentation](https://developers.cloudflare.com/kv/)
 - [Cloudflare R2 Documentation](https://developers.cloudflare.com/r2/)
-- [Cloudflare Hyperdrive Documentation](https://developers.cloudflare.com/hyperdrive/)
 - [Nuxt Cloudflare Deployment](https://nuxt.com/deploy/cloudflare)
 - [Drizzle ORM Documentation](https://orm.drizzle.team/)
+
+## Contributing
+
+Contributions welcome! Please open an issue or PR on [GitHub](https://github.com/sredon19/oneclick-nuxt-d1-r2-kv).
 
 ## License
 
