@@ -12,7 +12,7 @@
         "check": "nuxt typecheck && prettier . --check && eslint",
         "db:migrate:local": "wrangler d1 migrations apply DB --local",
         "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
-        "deploy": "nuxt build && wrangler deploy"
+        "deploy": "nuxt build && npm run db:migrate:remote && wrangler deploy"
     },
     "dependencies": {
         "@cloudflare/workers-types": "^4.20260120.0",

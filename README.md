@@ -25,9 +25,29 @@ Click the **Deploy to Cloudflare** button above to:
 3. ✅ Auto-provision a KV namespace (key-value store)
 4. ✅ Auto-provision an R2 bucket (object storage)
 5. ✅ Deploy to Cloudflare Workers globally
-6. ✅ Set up GitHub Actions CI/CD for automatic deployments
 
-No manual configuration required! The deploy button reads `wrangler.jsonc` and creates all necessary resources automatically.
+The deploy button reads `wrangler.jsonc` and creates all necessary resources automatically.
+
+### Post-Deployment: Apply Database Migrations
+
+The one-click deploy provisions an empty D1 database. To create the tables, run a deploy from your local machine:
+
+```bash
+# Clone your forked repository
+git clone https://github.com/YOUR_USERNAME/oneclick-nuxt-d1-r2-kv.git
+cd oneclick-nuxt-d1-r2-kv
+
+# Install dependencies
+npm install
+
+# Login to Cloudflare
+npx wrangler login
+
+# Deploy (automatically applies migrations)
+npm run deploy
+```
+
+> **Note:** The `deploy` script automatically runs migrations before deploying, so future schema changes are applied on every deploy.
 
 ## Features
 
