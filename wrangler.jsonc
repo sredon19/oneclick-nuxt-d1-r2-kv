@@ -1,0 +1,79 @@
+{
+  // Cloudflare Workers Configuration for Nuxt
+  // Deploy Button: https://deploy.workers.cloudflare.com/?url=<YOUR_REPO_URL>
+  // Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // ============================================================
+  // PROJECT CONFIGURATION
+  // ============================================================
+  "name": "nuxt-cloudflare-app",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2025-01-20",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // ============================================================
+  // OBSERVABILITY & PLACEMENT
+  // ============================================================
+  "observability": {
+    "enabled": true
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  // ============================================================
+  // STATIC ASSETS
+  // ============================================================
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  // ============================================================
+  // D1 DATABASE
+  // Auto-provisioned by Deploy to Cloudflare button
+  // ============================================================
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nuxt-app-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "server/database/migrations"
+    }
+  ],
+  // ============================================================
+  // KV NAMESPACE (Key-Value Storage)
+  // Auto-provisioned by Deploy to Cloudflare button
+  // ============================================================
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  // ============================================================
+  // R2 BUCKET (Object Storage)
+  // Auto-provisioned by Deploy to Cloudflare button
+  // ============================================================
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "nuxt-app-files"
+    }
+  ],
+  // ============================================================
+  // HYPERDRIVE (PostgreSQL/MySQL Connection Pooling) - Optional
+  // Uncomment and configure if you need external database access
+  // ============================================================
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "00000000000000000000000000000000"
+  //   }
+  // ],
+  // ============================================================
+  // ENVIRONMENT VARIABLES
+  // ============================================================
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}
