@@ -5,6 +5,13 @@
  */
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const method = event.method
 
     // Get the file key from the URL path (everything after /api/files/)

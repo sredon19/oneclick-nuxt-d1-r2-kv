@@ -5,6 +5,13 @@
  */
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const status = {
         timestamp: new Date().toISOString(),
         bindings: {

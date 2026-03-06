@@ -5,6 +5,13 @@
  */
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const method = event.method
     const query = getQuery(event)
 
@@ -14,7 +21,7 @@ export default defineEventHandler(async (event) => {
         const limit = Number(query.limit) || 100
         const cursor = query.cursor as string
 
-        const result = await listR2(event, { prefix, limit, cursor })
+        const result = await listR2(event, { prefix, limit, cursor, include: ['httpMetadata'] })
 
         return {
             success: true,
@@ -23,6 +30,8 @@ export default defineEventHandler(async (event) => {
                     key: obj.key,
                     size: obj.size,
                     etag: obj.etag,
+                    contentType: obj.httpMetadata?.contentType || null,
+                    uploadedAt: obj.uploaded ? new Date(obj.uploaded).toISOString() : null,
                 })),
                 truncated: result.truncated,
                 cursor: result.cursor,

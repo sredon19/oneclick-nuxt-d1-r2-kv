@@ -5,6 +5,13 @@
  */
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const method = event.method
 
     // POST - Upload a file
@@ -35,7 +42,7 @@ export default defineEventHandler(async (event) => {
         const arrayBuffer = fileField.data.buffer.slice(
             fileField.data.byteOffset,
             fileField.data.byteOffset + fileField.data.byteLength
-        )
+        ) as ArrayBuffer
 
         const uploadedFile = await uploadToR2(event, key, arrayBuffer, {
             contentType: fileField.type,

@@ -14,7 +14,7 @@ import * as schema from '../database/schema'
  * ```ts
  * export default defineEventHandler((event) => {
  *   const db = useDatabase(event)
- *   const users = await db.select().from(schema.users).all()
+ *   const users = await db.select().from(schema.user).all()
  * })
  * ```
  */
@@ -30,7 +30,7 @@ export function useDatabase(event?: H3Event) {
  * @example
  * ```ts
  * const db = useD1(event)
- * const result = await db.prepare('SELECT * FROM users').all()
+ * const result = await db.prepare('SELECT * FROM user').all()
  * ```
  */
 export function useD1(event?: H3Event): D1Database {

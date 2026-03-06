@@ -9,4 +9,11 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-module',
   },
+
+  runtimeConfig: {
+    betterAuthSecret: '',
+    betterAuthUrl: '',
+    googleClientId: '',
+    googleClientSecret: '',
+  },
 })

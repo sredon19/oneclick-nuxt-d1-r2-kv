@@ -1,84 +1,70 @@
-/**
- * Example D1 Database API Routes - Single User
- *
- * Demonstrates read, update, delete operations
- */
 import { eq } from 'drizzle-orm'
-import { users } from '../../database/schema'
+import { user } from '../../database/schema'
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const db = useDatabase(event)
+    const id = getRouterParam(event, 'id') || ''
     const method = event.method
-    const id = Number(getRouterParam(event, 'id'))
 
-    if (isNaN(id)) {
-        throw createError({
-            statusCode: 400,
-            message: 'Invalid user ID',
-        })
+    if (!id) {
+        throw createError({ statusCode: 400, message: 'User id is required' })
     }
 
-    // GET - Get a single user
     if (method === 'GET') {
-        const user = await db.select().from(users).where(eq(users.id, id)).get()
+        const found = await db.select().from(user).where(eq(user.id, id)).get()
 
-        if (!user) {
-            throw createError({
-                statusCode: 404,
-                message: 'User not found',
-            })
+        if (!found) {
+            throw createError({ statusCode: 404, message: 'User not found' })
         }
 
-        return {
-            success: true,
-            data: user,
-        }
+        return { success: true, data: found }
     }
 
-    // PUT - Update a user
     if (method === 'PUT') {
-        const body = await readBody<{ email?: string; name?: string }>(event)
+        const body = await readBody<{ name?: string; image?: string | null; email?: string }>(event)
+        const updates: { name?: string; image?: string | null; email?: string; updatedAt: Date } = {
+            updatedAt: new Date(),
+        }
 
-        const updated = await db.update(users)
-            .set({
-                ...body,
-                updatedAt: new Date().toISOString(),
-            })
-            .where(eq(users.id, id))
-            .returning()
+        if (typeof body.name === 'string' && body.name.trim()) {
+            updates.name = body.name.trim()
+        }
+        if (typeof body.image === 'string' || body.image === null) {
+            updates.image = body.image
+        }
+        if (typeof body.email === 'string' && body.email.trim()) {
+            updates.email = body.email.trim().toLowerCase()
+        }
+
+        if (!updates.name && updates.image === undefined && !updates.email) {
+            throw createError({ statusCode: 400, message: 'No valid fields to update' })
+        }
+
+        const updated = await db.update(user).set(updates).where(eq(user.id, id)).returning()
 
         if (updated.length === 0) {
-            throw createError({
-                statusCode: 404,
-                message: 'User not found',
-            })
+            throw createError({ statusCode: 404, message: 'User not found' })
         }
 
-        return {
-            success: true,
-            data: updated[0],
-        }
+        return { success: true, data: updated[0] }
     }
 
-    // DELETE - Delete a user
     if (method === 'DELETE') {
-        const deleted = await db.delete(users).where(eq(users.id, id)).returning()
+        const deleted = await db.delete(user).where(eq(user.id, id)).returning()
 
         if (deleted.length === 0) {
-            throw createError({
-                statusCode: 404,
-                message: 'User not found',
-            })
+            throw createError({ statusCode: 404, message: 'User not found' })
         }
 
-        return {
-            success: true,
-            data: deleted[0],
-        }
+        return { success: true, data: deleted[0] }
     }
 
-    throw createError({
-        statusCode: 405,
-        message: 'Method not allowed',
-    })
+    throw createError({ statusCode: 405, message: 'Method not allowed' })
 })

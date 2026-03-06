@@ -5,6 +5,13 @@
  */
 
 export default defineEventHandler(async (event) => {
+    const auth = useAuth(event)
+    const session = await auth.api.getSession({ headers: event.headers })
+
+    if (!session) {
+        throw createError({ statusCode: 401, message: 'Unauthorized' })
+    }
+
     const method = event.method
     const query = getQuery(event)
     const key = query.key as string

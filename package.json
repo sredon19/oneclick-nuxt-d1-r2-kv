@@ -10,13 +10,16 @@
         "postinstall": "nuxt prepare",
         "format": "prettier . --write",
         "check": "nuxt typecheck && prettier . --check && eslint",
-        "db:migrate:local": "wrangler d1 migrations apply DB --local",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate:local": "npm run db:generate && wrangler d1 migrations apply DB --local",
         "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
         "deploy": "nuxt build && npm run db:migrate:remote && wrangler deploy"
     },
     "dependencies": {
+        "@better-auth/drizzle-adapter": "^1.5.3",
         "@cloudflare/workers-types": "^4.20260120.0",
         "@nuxt/eslint": "^1.12.1",
+        "better-auth": "^1.5.3",
         "drizzle-orm": "^0.45.1",
         "nuxt": "^4.2.2",
         "vue": "^3.5.25",
@@ -25,6 +28,7 @@
     },
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+        "drizzle-kit": "^0.31.9",
         "nitro-cloudflare-dev": "^0.2.2",
         "prettier": "^3.7.4"
     },

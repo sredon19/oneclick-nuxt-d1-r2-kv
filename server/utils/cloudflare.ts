@@ -62,7 +62,7 @@ export interface CloudflareEnv {
     BUCKET: R2Bucket
 
     // Durable Objects
-    COUNTER: DurableObjectNamespace
+    COUNTER?: DurableObjectNamespace
 
     // Hyperdrive (optional)
     HYPERDRIVE?: Hyperdrive
@@ -72,6 +72,12 @@ export interface CloudflareEnv {
 
     // Environment Variables
     ENVIRONMENT: string
+
+    // Auth
+    BETTER_AUTH_URL?: string
+    BETTER_AUTH_SECRET?: string
+    GOOGLE_CLIENT_ID?: string
+    GOOGLE_CLIENT_SECRET?: string
 }
 
 /**
@@ -162,6 +168,7 @@ export interface R2Object {
     size: number
     etag: string
     httpEtag: string
+    uploaded?: Date
     httpMetadata?: Record<string, string>
     customMetadata?: Record<string, string>
     body: ReadableStream

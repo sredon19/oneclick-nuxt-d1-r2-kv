@@ -82,7 +82,15 @@ export async function deleteFromR2(event: H3Event, key: string) {
 /**
  * List files in R2 bucket
  */
-export async function listR2(event: H3Event, options?: { prefix?: string; limit?: number; cursor?: string }) {
+export async function listR2(
+    event: H3Event,
+    options?: {
+        prefix?: string
+        limit?: number
+        cursor?: string
+        include?: ('httpMetadata' | 'customMetadata')[]
+    }
+) {
     const bucket = useR2(event)
     return await bucket.list(options)
 }

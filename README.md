@@ -12,7 +12,7 @@ Unlike typical Nuxt templates that focus on frontend-only or Cloudflare Pages de
 
 - **Real backend utilities** - Not just bindings, but battle-tested helper functions for D1, KV, and R2
 - **Type-safe database** - Drizzle ORM with SQLite (D1) for relational data at the edge
-- **Working examples** - Complete CRUD APIs for users, file uploads, and caching
+- **Working examples** - Auth-protected API routes for health checks, file uploads, and caching
 - **Migration system** - Proper database versioning with SQL migrations
 - **Edge-first architecture** - Designed for global distribution from day one
 
@@ -74,7 +74,7 @@ npm run deploy
 ```
 ├── server/
 │   ├── api/                    # API routes
-│   │   ├── users/              # D1 database example
+│   │   ├── auth/               # Better Auth route handlers
 │   │   ├── kv/                 # KV storage example
 │   │   ├── files/              # R2 blob storage example
 │   │   ├── hyperdrive/         # Hyperdrive connection example
@@ -100,14 +100,13 @@ GET /api/health
 ```
 Returns status of all Cloudflare bindings.
 
-### Users (D1 Example)
+### Authentication (Better Auth)
 ```
-GET    /api/users          # List all users
-POST   /api/users          # Create a user
-GET    /api/users/:id      # Get a user
-PUT    /api/users/:id      # Update a user
-DELETE /api/users/:id      # Delete a user
+GET/POST /api/auth/*       # Better Auth handler routes
 ```
+
+Auth users are managed by Better Auth APIs/plugins. This template does not expose
+custom user CRUD routes.
 
 ### KV Storage
 ```
@@ -263,20 +262,22 @@ export default defineNuxtConfig({
 
 ```typescript
 // server/api/example.ts
-import { users } from '../database/schema'
+import { files } from '../database/schema'
 
 export default defineEventHandler(async (event) => {
   const db = useDatabase(event)
 
-  // Insert a user
-  await db.insert(users).values({
-    email: 'user@example.com',
-    name: 'John Doe'
+  // Insert file metadata
+  await db.insert(files).values({
+    key: `uploads/${Date.now()}-example.txt`,
+    filename: 'example.txt',
+    contentType: 'text/plain',
+    size: 12,
   })
 
-  // Query users
-  const allUsers = await db.select().from(users)
-  return allUsers
+  // Query file metadata
+  const allFiles = await db.select().from(files)
+  return allFiles
 })
 ```
 
@@ -327,7 +328,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const sql = postgres(connectionString)
-  const result = await sql`SELECT * FROM users`
+  const result = await sql`SELECT NOW() AS current_time`
   return result
 })
 ```
@@ -379,10 +380,10 @@ export default defineEventHandler(async (event) => {
     max: 1,
   })
   
-  const users = await sql`SELECT * FROM users`
+  const result = await sql`SELECT NOW() AS current_time`
   await sql.end()
   
-  return { success: true, data: users }
+  return { success: true, data: result }
 })
 ```
 
@@ -453,9 +454,9 @@ export default defineEventHandler(async (event) => {
   const sql = useNeon(event)
   
   // Tagged template literal syntax
-  const users = await sql`SELECT * FROM users WHERE active = true`
+  const result = await sql`SELECT NOW() AS current_time`
   
-  return { success: true, data: users }
+  return { success: true, data: result }
 })
 ```
 

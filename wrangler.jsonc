@@ -74,6 +74,11 @@
   // ENVIRONMENT VARIABLES
   // ============================================================
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "BETTER_AUTH_URL": "https://your-domain.example.com",
+    "GOOGLE_CLIENT_ID": "REPLACE_WITH_GOOGLE_CLIENT_ID"
   }
+  // Set sensitive values with Wrangler secrets:
+  // npx wrangler secret put GOOGLE_CLIENT_SECRET
+  // npx wrangler secret put BETTER_AUTH_SECRET
 }
