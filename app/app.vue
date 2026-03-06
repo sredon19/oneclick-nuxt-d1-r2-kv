@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { authClient } from '~/lib/auth-client'
+import { useAuthClient } from '~/lib/auth-client'
 
+const authClient = useAuthClient()
 const session = authClient.useSession()
 const sessionData = computed(() => session.value?.data ?? null)
 
