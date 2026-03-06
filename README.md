@@ -108,6 +108,9 @@ GET/POST /api/auth/*       # Better Auth handler routes
 Auth users are managed by Better Auth APIs/plugins. This template does not expose
 custom user CRUD routes.
 
+Organization roles are managed through the Better Auth organization plugin
+(`owner`, `admin`, `member`) with access-control checks.
+
 ### KV Storage
 ```
 GET    /api/kv?key=mykey           # Get a value

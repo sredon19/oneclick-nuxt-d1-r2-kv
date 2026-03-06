@@ -19,6 +19,7 @@ export const session = sqliteTable('session', {
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    activeOrganizationId: text('active_organization_id'),
 })
 
 export const account = sqliteTable('account', {
@@ -42,8 +43,36 @@ export const verification = sqliteTable('verification', {
     identifier: text('identifier').notNull(),
     value: text('value').notNull(),
     expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const organization = sqliteTable('organization', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    logo: text('logo'),
+    metadata: text('metadata'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const member = sqliteTable('member', {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id').notNull().references(() => organization.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    role: text('role').notNull().default('member'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const invitation = sqliteTable('invitation', {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id').notNull().references(() => organization.id, { onDelete: 'cascade' }),
+    email: text('email').notNull(),
+    role: text('role'),
+    status: text('status').notNull().default('pending'),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+    inviterId: text('inviter_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 })
 
 export const files = sqliteTable('files', {
@@ -52,6 +81,6 @@ export const files = sqliteTable('files', {
     filename: text('filename').notNull(),
     contentType: text('content_type'),
     size: integer('size'),
-    userId: text('user_id').references(() => user.id),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
     createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 })

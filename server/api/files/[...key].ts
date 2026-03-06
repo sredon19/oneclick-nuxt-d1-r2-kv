@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
         // Return file with appropriate headers
         setHeader(event, 'Content-Type', file.httpMetadata?.contentType || 'application/octet-stream')
-        setHeader(event, 'Content-Length', file.size.toString())
+        setHeader(event, 'Content-Length', file.size)
         setHeader(event, 'ETag', file.etag)
 
         return file.body

@@ -93,15 +93,11 @@ npm run deploy
 
 ## API Route Patterns
 
-All API routes follow RESTful conventions:
+Auth flows are handled by Better Auth endpoints and plugins:
 
-- **GET** `/api/users` - List resources
-- **POST** `/api/users` - Create resource (use `readBody<T>(event)`)
-- **GET** `/api/users/[id]` - Get single resource
-- **PUT** `/api/users/[id]` - Update resource
-- **DELETE** `/api/users/[id]` - Delete resource
-
-Return format: `{ success: boolean, data?: T, error?: string }`
+- **GET/POST** `/api/auth/*` - Better Auth handlers and plugin endpoints
+- **Do not** implement custom CRUD over Better Auth core tables (`user`, `session`, `account`, `verification`)
+- For authorization, use Better Auth plugin capabilities (organization/admin/access control) instead of direct DB writes
 
 ## Key Files
 

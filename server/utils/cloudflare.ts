@@ -6,6 +6,11 @@
  */
 import type { H3Event } from 'h3'
 
+interface WorkerExecutionContext {
+    waitUntil(promise: Promise<unknown>): void
+    passThroughOnException?(): void
+}
+
 /**
  * Get all Cloudflare bindings from the current event
  *
@@ -18,20 +23,25 @@ import type { H3Event } from 'h3'
  */
 export function useCloudflare(event?: H3Event) {
     const ev = event || useEvent()
-    const cloudflare = ev.context.cloudflare
+    const cloudflare = ev.context.cloudflare as unknown as
+        | { env: CloudflareEnv; context?: WorkerExecutionContext }
+        | undefined
 
     if (!cloudflare) {
         // In development, return mock bindings
-        if (process.dev) {
+        if (import.meta.dev) {
             console.warn('Cloudflare context not available in development. Using mock bindings.')
-            return { env: {} as CloudflareEnv, ctx: {} }
+            return { env: {} as CloudflareEnv, ctx: {} as WorkerExecutionContext }
         }
         throw new Error(
             'Cloudflare context not found. Make sure you are running in a Cloudflare Workers environment.'
         )
     }
 
-    return cloudflare as { env: CloudflareEnv; ctx: ExecutionContext }
+    return {
+        env: cloudflare.env,
+        ctx: cloudflare.context ?? ({} as WorkerExecutionContext),
+    }
 }
 
 /**

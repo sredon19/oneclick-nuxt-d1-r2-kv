@@ -1,7 +1,9 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { organization } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
 import type { H3Event } from 'h3'
+import { adminRole, memberRole, orgAccessControl, ownerRole } from '../../shared/auth/access'
 import * as schema from '../database/schema'
 
 export function useAuth(event: H3Event) {
@@ -27,6 +29,16 @@ export function useAuth(event: H3Event) {
                 },
             }
             : {},
+        plugins: [
+            organization({
+                ac: orgAccessControl,
+                roles: {
+                    owner: ownerRole,
+                    admin: adminRole,
+                    member: memberRole,
+                },
+            }),
+        ],
         session: {
             expiresIn: 60 * 60 * 24 * 30, // 30 days
             updateAge: 60 * 60 * 24, // refresh daily
